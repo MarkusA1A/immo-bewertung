@@ -600,20 +600,27 @@
             document.getElementById(elementId).textContent = value.toFixed(2) + ' %';
         }
 
+        function parseAustrianNumber(str) {
+            // Konvertiert österreichische Zahlenformate (1.000,50) zu JavaScript-Format (1000.50)
+            if (typeof str !== 'string') str = str.toString();
+            // Entfernt Tausender-Trennzeichen (Punkte) und konvertiert Komma zu Punkt
+            return parseFloat(str.replace(/\./g, '').replace(/,/g, '.'));
+        }
+
         function calculateValuation() {
             const projectName = document.getElementById('projectName').value || 'Bewertung';
             const yearBuilt = parseInt(document.getElementById('yearBuilt').value);
-            const totalArea = parseFloat(document.getElementById('totalArea').value);
-            const annualRent = parseFloat(document.getElementById('annualRent').value);
-            const operatingCosts = parseFloat(document.getElementById('operatingCosts').value);
-            const vacancyRate = parseFloat(document.getElementById('vacancyRate').value) / 100;
-            const maintenanceRate = parseFloat(document.getElementById('maintenanceRate').value) / 100;
-            const capRate = parseFloat(document.getElementById('capRate').value) / 100;
-            const pricePerSqm = parseFloat(document.getElementById('pricePerSqm').value);
-            const adjustmentPercent = parseFloat(document.getElementById('adjustmentPercent').value) / 100;
-            const landValue = parseFloat(document.getElementById('landValue').value);
-            const constructionCosts = parseFloat(document.getElementById('constructionCosts').value);
-            const ageDeduction = parseFloat(document.getElementById('ageDeduction').value) / 100;
+            const totalArea = parseAustrianNumber(document.getElementById('totalArea').value);
+            const annualRent = parseAustrianNumber(document.getElementById('annualRent').value);
+            const operatingCosts = parseAustrianNumber(document.getElementById('operatingCosts').value);
+            const vacancyRate = parseAustrianNumber(document.getElementById('vacancyRate').value) / 100;
+            const maintenanceRate = parseAustrianNumber(document.getElementById('maintenanceRate').value) / 100;
+            const capRate = parseAustrianNumber(document.getElementById('capRate').value) / 100;
+            const pricePerSqm = parseAustrianNumber(document.getElementById('pricePerSqm').value);
+            const adjustmentPercent = parseAustrianNumber(document.getElementById('adjustmentPercent').value) / 100;
+            const landValue = parseAustrianNumber(document.getElementById('landValue').value);
+            const constructionCosts = parseAustrianNumber(document.getElementById('constructionCosts').value);
+            const ageDeduction = parseAustrianNumber(document.getElementById('ageDeduction').value) / 100;
 
             // 1. ERTRAGSWERTVERFAHREN
             const grossRentAmount = annualRent;
