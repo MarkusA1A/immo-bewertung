@@ -429,17 +429,23 @@
                     <div class="card-title">Sachwertverfahren</div>
                     <div class="input-group">
                         <div class="form-group">
+                            <label class="form-label">Grundstücksfläche (m²)</label>
+                            <input type="number" id="landArea" min="0" value="500" step="0.01">
+                        </div>
+                        <div class="form-group">
                             <label class="form-label">Bodenrichtwert (€/m²)</label>
                             <input type="number" id="landValue" min="0" value="600" step="0.01">
                         </div>
+                    </div>
+                    <div class="input-group">
                         <div class="form-group">
                             <label class="form-label">Herstellungskosten (€/m²)</label>
                             <input type="number" id="constructionCosts" min="0" value="1800" step="0.01">
                         </div>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Abschlag für Alter (%)</label>
-                        <input type="number" id="ageDeduction" min="0" max="100" value="30" step="0.1">
+                        <div class="form-group">
+                            <label class="form-label">Gesamtnutzungsdauer (Jahre)</label>
+                            <input type="number" id="totalUsefulLife" min="0" value="80" step="1">
+                        </div>
                     </div>
                 </div>
 
@@ -507,11 +513,27 @@
                     <table class="table">
                         <tbody>
                             <tr>
-                                <td>Bodenrichtwert</td>
+                                <td>Bodenwert (€/m² × Grundst.fläche)</td>
                                 <td class="value-right" id="landValueTotal">€ 0</td>
                             </tr>
                             <tr>
-                                <td>Herstellungskosten (altersbereinigt)</td>
+                                <td>Herstellungskosten (Gesamtkosten)</td>
+                                <td class="value-right" id="replacementCosts">€ 0</td>
+                            </tr>
+                            <tr>
+                                <td>Alter des Objekts</td>
+                                <td class="value-right" id="ageDisplay">0 Jahre</td>
+                            </tr>
+                            <tr>
+                                <td>Restnutzungsdauer</td>
+                                <td class="value-right" id="remainingLife">0 Jahre</td>
+                            </tr>
+                            <tr>
+                                <td>Wertminderung durch Alter</td>
+                                <td class="value-right" id="depreciationAmount">€ 0</td>
+                            </tr>
+                            <tr style="background: var(--color-surface-raised);">
+                                <td><strong>Bauwert (nach Alter)</strong></td>
                                 <td class="value-right" id="constructionValue">€ 0</td>
                             </tr>
                         </tbody>
@@ -618,9 +640,12 @@
             const capRate = parseAustrianNumber(document.getElementById('capRate').value) / 100;
             const pricePerSqm = parseAustrianNumber(document.getElementById('pricePerSqm').value);
             const adjustmentPercent = parseAustrianNumber(document.getElementById('adjustmentPercent').value) / 100;
+            const landArea = parseAustrianNumber(document.getElementById('landArea').value);
             const landValue = parseAustrianNumber(document.getElementById('landValue').value);
             const constructionCosts = parseAustrianNumber(document.getElementById('constructionCosts').value);
-            const ageDeduction = parseAustrianNumber(document.getElementById('ageDeduction').value) / 100;
+            const totalUsefulLife = parseInt(document.getElementById('totalUsefulLife').value);
+            const currentYear = new Date().getFullYear();
+            const ageYears = currentYear - yearBuilt;
 
             // 1. ERTRAGSWERTVERFAHREN
             const grossRentAmount = annualRent;
@@ -635,9 +660,20 @@
             const adjustmentValue = baseValue * adjustmentPercent;
             const comparisonValue = baseValue + adjustmentValue;
 
-            // 3. SACHWERTVERFAHREN
-            const landValueTotal = landValue * totalArea;
-            const constructionValue = constructionCosts * totalArea * (1 - ageDeduction);
+            // 3. SACHWERTVERFAHREN (nach ÖNORM Z 1255)
+            // Bodenenwert
+            const landValueTotal = landValue * landArea;
+            
+            // Herstellungskosten (Kostenermittlung)
+            const replacementCosts = constructionCosts * totalArea;
+            
+            // Restnutzungsdauer und Wertminderung
+            const remainingUsefulLife = Math.max(0, totalUsefulLife - ageYears);
+            const worthReductionPercent = Math.max(0, 1 - (remainingUsefulLife / totalUsefulLife));
+            const depreciation = replacementCosts * worthReductionPercent;
+            const constructionValue = replacementCosts - depreciation;
+            
+            // Sachwert (Substanzwert)
             const substanceValue = landValueTotal + constructionValue;
 
             // Recommended value
@@ -660,6 +696,10 @@
             setResultValue('comparisonValue', comparisonValue);
 
             setResultValue('landValueTotal', landValueTotal);
+            setResultValue('replacementCosts', replacementCosts);
+            document.getElementById('ageDisplay').textContent = ageYears + ' Jahre';
+            document.getElementById('remainingLife').textContent = Math.max(0, remainingUsefulLife) + ' Jahre';
+            setResultValue('depreciationAmount', depreciation);
             setResultValue('constructionValue', constructionValue);
             setResultValue('substanceValue', substanceValue);
 
