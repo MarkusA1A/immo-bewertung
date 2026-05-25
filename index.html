@@ -384,16 +384,10 @@
 
                 <!-- Finanzielle Daten -->
                 <div class="card" style="margin-top: 24px;">
-                    <div class="card-title">Finanzielle Kennzahlen</div>
-                    <div class="input-group">
-                        <div class="form-group">
-                            <label class="form-label">Kaufpreis (€)</label>
-                            <input type="number" id="purchasePrice" min="0" value="500000" step="0.01">
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Jahresmieteinnahmen (€)</label>
-                            <input type="number" id="annualRent" min="0" value="30000" step="0.01">
-                        </div>
+                    <div class="card-title">Mieteinnahmen & Kosten</div>
+                    <div class="form-group">
+                        <label class="form-label">Jahresmieteinnahmen (€)</label>
+                        <input type="number" id="annualRent" min="0" value="30000" step="0.01">
                     </div>
                     <div class="input-group">
                         <div class="form-group">
@@ -559,20 +553,16 @@
                         </tbody>
                     </table>
 
-                    <div class="section-header">Rentabilitätskennzahlen</div>
+                    <div class="section-header">Kapitalwertermittlung</div>
                     <table class="table">
                         <tbody>
                             <tr>
-                                <td>Brutto-Mietrendite</td>
-                                <td class="value-right" id="grossYield">0 %</td>
+                                <td>Kapitalisierungszinssatz</td>
+                                <td class="value-right" id="capRateDisplay">5 %</td>
                             </tr>
                             <tr>
-                                <td>Netto-Mietrendite</td>
-                                <td class="value-right" id="netYield">0 %</td>
-                            </tr>
-                            <tr>
-                                <td>Kaufpreismultiplikator</td>
-                                <td class="value-right" id="priceMultiple">0 x</td>
+                                <td>Bewertungsformel</td>
+                                <td class="value-right" style="font-family: var(--font-mono); font-size: 0.85rem;">Ertragswert = Nettomiete / Zins</td>
                             </tr>
                         </tbody>
                     </table>
@@ -614,7 +604,6 @@
             const projectName = document.getElementById('projectName').value || 'Bewertung';
             const yearBuilt = parseInt(document.getElementById('yearBuilt').value);
             const totalArea = parseFloat(document.getElementById('totalArea').value);
-            const purchasePrice = parseFloat(document.getElementById('purchasePrice').value);
             const annualRent = parseFloat(document.getElementById('annualRent').value);
             const operatingCosts = parseFloat(document.getElementById('operatingCosts').value);
             const vacancyRate = parseFloat(document.getElementById('vacancyRate').value) / 100;
@@ -648,10 +637,8 @@
             const recommendedValue = (incomeValue + comparisonValue + substanceValue) / 3;
             const recommendedPerSqm = recommendedValue / totalArea;
 
-            // Kennzahlen
-            const grossYield = (grossRentAmount / purchasePrice) * 100;
-            const netYield = (netIncome / purchasePrice) * 100;
-            const priceMultiple = purchasePrice / (grossRentAmount || 1);
+            // Marktindikatoren (orientierungswerte)
+            // Diese sind NICHT Teil der Ertragswertermittlung, sondern dienen der Plausibilitätsprüfung
 
             // Update results
             setResultValue('netIncome', netIncome);
@@ -679,26 +666,22 @@
             setResultValue('recommendedValue', recommendedValue);
             setResultValue('recommendedPerSqm', recommendedPerSqm);
 
-            setResultPercent('grossYield', grossYield);
-            setResultPercent('netYield', netYield);
-            document.getElementById('priceMultiple').textContent = priceMultiple.toFixed(1) + ' x';
+            // Marktindikatoren berechnen (optional, für Vergleichbarkeit)
+            // Diese Werte sind nur zur Plausibilitätsprüfung
 
-            // Warnings
+            // Plausibilitätsprüfungen
             const warningsHtml = [];
             if (vacancyRate > 0.1) {
-                warningsHtml.push('<div class="warning"><span class="indicator"></span>Hohe Leerstandsquote (' + (vacancyRate * 100).toFixed(1) + '%) – reduziert Rentabilität</div>');
+                warningsHtml.push('<div class="warning"><span class="indicator"></span>Hohe Leerstandsquote (' + (vacancyRate * 100).toFixed(1) + '%) – beeinträchtigt Nettomieteinnahmen</div>');
             }
             if (yearBuilt < 1950) {
-                warningsHtml.push('<div class="warning"><span class="indicator"></span>Alte Bausubstanz – erhöhte Instandhaltungskosten zu erwarten</div>');
+                warningsHtml.push('<div class="warning"><span class="indicator"></span>Alte Bausubstanz – erhöhte Instandhaltungskosten einplanen</div>');
             }
-            if (netYield < 2) {
-                warningsHtml.push('<div class="warning"><span class="indicator"></span>Netto-Rendite unter 2% – überprüfen Sie Eingaben</div>');
+            if (maintenanceRate < 0.5) {
+                warningsHtml.push('<div class="warning"><span class="indicator"></span>Instandhaltungsquote sehr niedrig – realistische Werte empfohlen (1-2%)</div>');
             }
-            if (incomeValue < purchasePrice * 0.8 || incomeValue > purchasePrice * 1.2) {
-                warningsHtml.push('<div class="warning"><span class="indicator"></span>Ertragswert weicht stark vom Kaufpreis ab – detaillierte Prüfung empfohlen</div>');
-            }
-            if (netYield > 8) {
-                warningsHtml.push('<div class="success"><span class="indicator success"></span>Attraktive Rendite – überprüfen Sie Realität der Eingaben</div>');
+            if (capRate < 0.02 || capRate > 0.15) {
+                warningsHtml.push('<div class="warning"><span class="indicator"></span>Kapitalisierungszinssatz unplausibel – Übliche Spanne: 4-6%</div>');
             }
 
             document.getElementById('warnings').innerHTML = warningsHtml.join('');
@@ -708,17 +691,15 @@
                 projectName,
                 yearBuilt,
                 totalArea,
-                purchasePrice,
                 annualRent,
                 operatingCosts,
                 vacancyRate,
+                capRate,
                 incomeValue,
                 comparisonValue,
                 substanceValue,
                 recommendedValue,
-                netIncome,
-                grossYield,
-                netYield
+                netIncome
             };
         }
 
@@ -741,18 +722,17 @@
                         <tr><td style="padding: 8px; border: 1px solid #ccc;"><strong>Fläche (m²)</strong></td><td style="padding: 8px; border: 1px solid #ccc;">${data.totalArea}</td></tr>
                     </table>
 
-                    <h3>Finanzielle Daten</h3>
+                    <h3>Ermittelte Kennzahlen</h3>
                     <table style="width: 100%; border-collapse: collapse;">
-                        <tr><td style="padding: 8px; border: 1px solid #ccc;"><strong>Kaufpreis</strong></td><td style="padding: 8px; border: 1px solid #ccc;">€ ${data.purchasePrice.toLocaleString('de-AT')}</td></tr>
                         <tr><td style="padding: 8px; border: 1px solid #ccc;"><strong>Jahresmieteinnahmen</strong></td><td style="padding: 8px; border: 1px solid #ccc;">€ ${data.annualRent.toLocaleString('de-AT')}</td></tr>
                         <tr><td style="padding: 8px; border: 1px solid #ccc;"><strong>Nettomieteinnahmen</strong></td><td style="padding: 8px; border: 1px solid #ccc;">€ ${data.netIncome.toLocaleString('de-AT')}</td></tr>
+                        <tr><td style="padding: 8px; border: 1px solid #ccc;"><strong>Kapitalisierungszinssatz</strong></td><td style="padding: 8px; border: 1px solid #ccc;">${(data.capRate * 100).toFixed(2)} %</td></tr>
                     </table>
 
-                    <h3>Bewertungsergebnis</h3>
+                    <h3>Bewertungsergebnis nach Ertragswertverfahren</h3>
                     <table style="width: 100%; border-collapse: collapse;">
-                        <tr style="background: #0d6e4f; color: white;"><td style="padding: 8px;"><strong>Empfohlener Marktwert</strong></td><td style="padding: 8px;">€ ${data.recommendedValue.toLocaleString('de-AT')}</td></tr>
-                        <tr><td style="padding: 8px; border: 1px solid #ccc;"><strong>Brutto-Rendite</strong></td><td style="padding: 8px; border: 1px solid #ccc;">${data.grossYield.toFixed(2)} %</td></tr>
-                        <tr><td style="padding: 8px; border: 1px solid #ccc;"><strong>Netto-Rendite</strong></td><td style="padding: 8px; border: 1px solid #ccc;">${data.netYield.toFixed(2)} %</td></tr>
+                        <tr style="background: #0d6e4f; color: white;"><td style="padding: 8px;"><strong>Ertragswert (Marktwert)</strong></td><td style="padding: 8px;">€ ${data.incomeValue.toLocaleString('de-AT')}</td></tr>
+                        <tr><td style="padding: 8px; border: 1px solid #ccc;"><strong>Ertragswert pro m²</strong></td><td style="padding: 8px; border: 1px solid #ccc;">€ ${(data.incomeValue / data.totalArea).toLocaleString('de-AT', {maximumFractionDigits: 2})}</td></tr>
                     </table>
 
                     <p style="margin-top: 30px; font-size: 10px; color: #666; line-height: 1.5;">
