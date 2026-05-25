@@ -1,0 +1,705 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Immobilienbewertung - Zinshäuser</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;700&family=Outfit:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <style>
+        :root {
+            --color-bg:             #fafafa;
+            --color-surface:        #ffffff;
+            --color-surface-raised: #f5f5f5;
+            --color-border:         rgba(0,0,0,0.08);
+            --color-text:           #1a1a1a;
+            --color-text-secondary: #555555;
+            --color-text-muted:     #888888;
+            --color-accent:         #0d6e4f;
+            --color-accent-dim:     #0b5e43;
+            --color-accent-soft:    rgba(13, 110, 79, 0.08);
+            --color-success:        #16a34a;
+            --color-warning:        #d97706;
+            --color-danger:         #dc2626;
+            --font-display:         'Playfair Display', Georgia, serif;
+            --font-sans:            'Outfit', -apple-system, sans-serif;
+            --font-mono:            'IBM Plex Mono', 'SF Mono', monospace;
+            --radius-md:            12px;
+            --radius-lg:            16px;
+            --shadow-raised:        0 4px 16px rgba(13,110,79,0.15);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: var(--color-bg);
+            color: var(--color-text);
+            font-family: var(--font-sans);
+            font-size: 0.95rem;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 32px;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 16px;
+            }
+        }
+
+        h1 {
+            font-family: var(--font-display);
+            font-size: clamp(1.8rem, 5vw, 2.8rem);
+            font-weight: 500;
+            margin-bottom: 8px;
+            color: var(--color-accent);
+        }
+
+        .subtitle {
+            color: var(--color-text-secondary);
+            margin-bottom: 32px;
+            font-size: 1rem;
+        }
+
+        .layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+            margin-bottom: 24px;
+        }
+
+        @media (max-width: 1024px) {
+            .layout {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .card {
+            background: var(--color-surface);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-lg);
+            padding: 24px;
+        }
+
+        .card-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 16px;
+            color: var(--color-text);
+            border-bottom: 2px solid var(--color-accent-soft);
+            padding-bottom: 12px;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            color: var(--color-text-secondary);
+            margin-bottom: 6px;
+        }
+
+        input[type="text"],
+        input[type="number"],
+        select,
+        textarea {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid var(--color-border);
+            border-radius: 8px;
+            font-family: var(--font-sans);
+            font-size: 0.95rem;
+            transition: 0.2s;
+        }
+
+        input[type="text"]:focus,
+        input[type="number"]:focus,
+        select:focus,
+        textarea:focus {
+            outline: none;
+            border-color: var(--color-accent);
+            box-shadow: 0 0 0 3px var(--color-accent-soft);
+        }
+
+        .input-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        @media (max-width: 600px) {
+            .input-group {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .button {
+            display: inline-block;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 100px;
+            font-family: var(--font-sans);
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .button-primary {
+            background: var(--color-accent);
+            color: white;
+        }
+
+        .button-primary:hover {
+            background: var(--color-accent-dim);
+            box-shadow: var(--shadow-raised);
+        }
+
+        .button-secondary {
+            background: var(--color-surface-raised);
+            color: var(--color-text);
+            border: 1px solid var(--color-border);
+        }
+
+        .button-group {
+            display: flex;
+            gap: 12px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+
+        .result-card {
+            background: linear-gradient(135deg, rgba(13, 110, 79, 0.05) 0%, rgba(13, 110, 79, 0.02) 100%);
+            border: 2px solid var(--color-accent-soft);
+            padding: 20px;
+            border-radius: var(--radius-lg);
+            margin-bottom: 16px;
+        }
+
+        .result-value {
+            font-family: var(--font-mono);
+            font-size: 1.8rem;
+            font-weight: 600;
+            color: var(--color-accent);
+            margin: 12px 0;
+        }
+
+        .result-label {
+            font-size: 0.9rem;
+            color: var(--color-text-secondary);
+            margin-bottom: 4px;
+        }
+
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 16px 0;
+            font-size: 0.9rem;
+        }
+
+        .table th {
+            background: var(--color-surface-raised);
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+            border-bottom: 2px solid var(--color-border);
+        }
+
+        .table td {
+            padding: 10px 12px;
+            border-bottom: 1px solid var(--color-border);
+        }
+
+        .table tr:hover {
+            background: var(--color-surface-raised);
+        }
+
+        .value-right {
+            text-align: right;
+            font-family: var(--font-mono);
+        }
+
+        .warning {
+            background: rgba(217, 119, 6, 0.05);
+            border-left: 4px solid var(--color-warning);
+            padding: 12px;
+            border-radius: 4px;
+            margin: 12px 0;
+            font-size: 0.85rem;
+            color: #92400e;
+        }
+
+        .success {
+            background: rgba(22, 163, 74, 0.05);
+            border-left: 4px solid var(--color-success);
+            padding: 12px;
+            border-radius: 4px;
+            margin: 12px 0;
+            font-size: 0.85rem;
+            color: #15803d;
+        }
+
+        .footer {
+            border-top: 1px solid var(--color-border);
+            padding: 16px 0;
+            margin-top: 48px;
+            text-align: center;
+            font-size: 0.75rem;
+            color: var(--color-text-muted);
+        }
+
+        .disclaimer {
+            margin-top: 12px;
+            line-height: 1.4;
+            color: var(--color-text-muted);
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        @media print {
+            .no-print {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📊 Immobilienbewertung</h1>
+        <p class="subtitle">Zinshäuser nach österreichischen Standards (ÖNORM, LBG)</p>
+
+        <div class="layout">
+            <!-- Linke Seite: Eingabeformulare -->
+            <div>
+                <!-- Liegenschaftsdaten -->
+                <div class="card">
+                    <div class="card-title">Liegenschaftsdaten</div>
+                    <div class="form-group">
+                        <label class="form-label">Projektname</label>
+                        <input type="text" id="projectName" placeholder="z.B. Zinshaus Wien 3">
+                    </div>
+                    <div class="input-group">
+                        <div class="form-group">
+                            <label class="form-label">Baujahr</label>
+                            <input type="number" id="yearBuilt" min="1800" max="2026" value="1970">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Gesamtfläche (m²)</label>
+                            <input type="number" id="totalArea" min="0" value="500" step="0.01">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Zustand</label>
+                        <select id="condition">
+                            <option value="excellent">Ausgezeichnet</option>
+                            <option value="good" selected>Gut</option>
+                            <option value="average">Durchschnittlich</option>
+                            <option value="poor">Sanierungsbedürftig</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Adresse</label>
+                        <input type="text" id="address" placeholder="Straße, PLZ, Ort">
+                    </div>
+                </div>
+
+                <!-- Finanzielle Daten -->
+                <div class="card" style="margin-top: 24px;">
+                    <div class="card-title">Finanzielle Kennzahlen</div>
+                    <div class="input-group">
+                        <div class="form-group">
+                            <label class="form-label">Kaufpreis (€)</label>
+                            <input type="number" id="purchasePrice" min="0" value="500000" step="0.01">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Jahresmieteinnahmen (€)</label>
+                            <input type="number" id="annualRent" min="0" value="30000" step="0.01">
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <div class="form-group">
+                            <label class="form-label">Nebenkosten/Jahr (€)</label>
+                            <input type="number" id="operatingCosts" min="0" value="8000" step="0.01">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Leerstandsquote (%)</label>
+                            <input type="number" id="vacancyRate" min="0" max="100" value="5" step="0.1">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Instandhaltungsrücklagen (%)</label>
+                        <input type="number" id="maintenanceRate" min="0" max="100" value="1" step="0.1">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Kapitalisierungszinssatz (%)</label>
+                        <input type="number" id="capRate" min="0" max="20" value="5" step="0.1">
+                    </div>
+                </div>
+
+                <!-- Vergleichswert -->
+                <div class="card" style="margin-top: 24px;">
+                    <div class="card-title">Vergleichswert</div>
+                    <div class="input-group">
+                        <div class="form-group">
+                            <label class="form-label">€/m² (Marktvergleich)</label>
+                            <input type="number" id="pricePerSqm" min="0" value="1200" step="0.01">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Zu-/Abschlag (%)</label>
+                            <input type="number" id="adjustmentPercent" value="0" step="0.1">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sachwertverfahren -->
+                <div class="card" style="margin-top: 24px;">
+                    <div class="card-title">Sachwertverfahren</div>
+                    <div class="input-group">
+                        <div class="form-group">
+                            <label class="form-label">Bodenrichtwert (€/m²)</label>
+                            <input type="number" id="landValue" min="0" value="600" step="0.01">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Herstellungskosten (€/m²)</label>
+                            <input type="number" id="constructionCosts" min="0" value="1800" step="0.01">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Abschlag für Alter (%)</label>
+                        <input type="number" id="ageDeduction" min="0" max="100" value="30" step="0.1">
+                    </div>
+                </div>
+
+                <div class="button-group">
+                    <button class="button button-primary" onclick="calculateValuation()">Bewertung berechnen</button>
+                    <button class="button button-secondary" onclick="exportPDF()">PDF exportieren</button>
+                </div>
+            </div>
+
+            <!-- Rechte Seite: Ergebnisse -->
+            <div id="results" class="hidden">
+                <!-- Ertragswertverfahren -->
+                <div class="card">
+                    <div class="card-title">Ertragswertverfahren</div>
+                    <div class="result-label">Nachhaltige Nettomieteinnahmen/Jahr</div>
+                    <div class="result-value" id="netIncome">€ 0</div>
+                    <table class="table">
+                        <tr>
+                            <td>Bruttomieteinnahmen</td>
+                            <td class="value-right" id="grossRent">€ 0</td>
+                        </tr>
+                        <tr>
+                            <td>Leerstandsquote</td>
+                            <td class="value-right" id="vacancyLoss">€ 0</td>
+                        </tr>
+                        <tr>
+                            <td>Nebenkosten</td>
+                            <td class="value-right" id="opCosts">€ 0</td>
+                        </tr>
+                        <tr>
+                            <td>Instandhaltung</td>
+                            <td class="value-right" id="maintenance">€ 0</td>
+                        </tr>
+                    </table>
+                    <div class="result-label">Ertragswert (ÖNORM)</div>
+                    <div class="result-value" id="incomeValue">€ 0</div>
+                </div>
+
+                <!-- Vergleichswertverfahren -->
+                <div class="card" style="margin-top: 24px;">
+                    <div class="card-title">Vergleichswertverfahren</div>
+                    <div class="result-label">Vergleichswert</div>
+                    <div class="result-value" id="comparisonValue">€ 0</div>
+                    <table class="table">
+                        <tr>
+                            <td>Basis (€/m² × Fläche)</td>
+                            <td class="value-right" id="baseValue">€ 0</td>
+                        </tr>
+                        <tr>
+                            <td>Zu-/Abschlag</td>
+                            <td class="value-right" id="adjustment">€ 0</td>
+                        </tr>
+                    </table>
+                </div>
+
+                <!-- Sachwertverfahren -->
+                <div class="card" style="margin-top: 24px;">
+                    <div class="card-title">Sachwertverfahren</div>
+                    <div class="result-label">Sachwert</div>
+                    <div class="result-value" id="substanceValue">€ 0</div>
+                    <table class="table">
+                        <tr>
+                            <td>Bodenrichtwert</td>
+                            <td class="value-right" id="landValueTotal">€ 0</td>
+                        </tr>
+                        <tr>
+                            <td>Herstellungskosten (abzüglich Alter)</td>
+                            <td class="value-right" id="constructionValue">€ 0</td>
+                        </tr>
+                    </table>
+                </div>
+
+                <!-- Zusammenfassung & Empfehlung -->
+                <div class="card" style="margin-top: 24px;">
+                    <div class="card-title">Bewertungsergebnis</div>
+                    <table class="table">
+                        <tr style="background: var(--color-surface-raised); font-weight: 600;">
+                            <td>Methode</td>
+                            <td class="value-right">Wert</td>
+                            <td class="value-right">€/m²</td>
+                        </tr>
+                        <tr>
+                            <td>Ertragswert</td>
+                            <td class="value-right" id="summaryIncome">€ 0</td>
+                            <td class="value-right" id="summaryIncomePerSqm">€ 0</td>
+                        </tr>
+                        <tr>
+                            <td>Vergleichswert</td>
+                            <td class="value-right" id="summaryComparison">€ 0</td>
+                            <td class="value-right" id="summaryComparisonPerSqm">€ 0</td>
+                        </tr>
+                        <tr>
+                            <td>Sachwert</td>
+                            <td class="value-right" id="summarySubstance">€ 0</td>
+                            <td class="value-right" id="summarySubstancePerSqm">€ 0</td>
+                        </tr>
+                        <tr style="background: var(--color-accent-soft); font-weight: 600; border-top: 2px solid var(--color-accent);">
+                            <td>Empfohlener Wert</td>
+                            <td class="value-right" id="recommendedValue">€ 0</td>
+                            <td class="value-right" id="recommendedPerSqm">€ 0</td>
+                        </tr>
+                    </table>
+
+                    <!-- Kennzahlen -->
+                    <div class="result-label" style="margin-top: 16px;">Kennzahlen</div>
+                    <table class="table" style="margin-bottom: 0;">
+                        <tr>
+                            <td>Brutto-Mietrendite</td>
+                            <td class="value-right" id="grossYield">0%</td>
+                        </tr>
+                        <tr>
+                            <td>Netto-Mietrendite</td>
+                            <td class="value-right" id="netYield">0%</td>
+                        </tr>
+                        <tr>
+                            <td>Kaufpreismultiplikator</td>
+                            <td class="value-right" id="priceMultiple">0x</td>
+                        </tr>
+                    </table>
+                </div>
+
+                <!-- Risikowarnung -->
+                <div id="warnings"></div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">
+            © 2026 <a href="mailto:mthalhamer@thalhamer.com">Markus O. Thalhamer</a> · Immobilienbewertung
+            <p class="disclaimer">
+                Diese App dient ausschließlich zur Unterstützung der Immobilienbewertung. Sie ersetzt keine professionelle Sachverständigenbewertung nach ÖNORM und LBG. Für verbindliche Gutachten konsultieren Sie einen zertifizierten Sachverständigen.
+            </p>
+        </div>
+    </div>
+
+    <script>
+        function formatCurrency(value) {
+            return new Intl.NumberFormat('de-AT', {
+                style: 'currency',
+                currency: 'EUR',
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 0
+            }).format(value);
+        }
+
+        function setResultValue(elementId, value) {
+            document.getElementById(elementId).textContent = formatCurrency(value);
+        }
+
+        function setResultPercent(elementId, value) {
+            document.getElementById(elementId).textContent = value.toFixed(2) + '%';
+        }
+
+        function calculateValuation() {
+            // Input values
+            const projectName = document.getElementById('projectName').value || 'Bewertung';
+            const yearBuilt = parseInt(document.getElementById('yearBuilt').value);
+            const totalArea = parseFloat(document.getElementById('totalArea').value);
+            const purchasePrice = parseFloat(document.getElementById('purchasePrice').value);
+            const annualRent = parseFloat(document.getElementById('annualRent').value);
+            const operatingCosts = parseFloat(document.getElementById('operatingCosts').value);
+            const vacancyRate = parseFloat(document.getElementById('vacancyRate').value) / 100;
+            const maintenanceRate = parseFloat(document.getElementById('maintenanceRate').value) / 100;
+            const capRate = parseFloat(document.getElementById('capRate').value) / 100;
+            const pricePerSqm = parseFloat(document.getElementById('pricePerSqm').value);
+            const adjustmentPercent = parseFloat(document.getElementById('adjustmentPercent').value) / 100;
+            const landValue = parseFloat(document.getElementById('landValue').value);
+            const constructionCosts = parseFloat(document.getElementById('constructionCosts').value);
+            const ageDeduction = parseFloat(document.getElementById('ageDeduction').value) / 100;
+
+            // 1. ERTRAGSWERTVERFAHREN (Income Approach)
+            const grossRentAmount = annualRent;
+            const vacancyLossAmount = grossRentAmount * vacancyRate;
+            const rentAfterVacancy = grossRentAmount - vacancyLossAmount;
+            const maintenanceAmount = rentAfterVacancy * maintenanceRate;
+            const netIncome = rentAfterVacancy - operatingCosts - maintenanceAmount;
+            const incomeValue = netIncome / capRate;
+
+            // 2. VERGLEICHSWERTVERFAHREN (Market Approach)
+            const baseValue = pricePerSqm * totalArea;
+            const adjustmentValue = baseValue * adjustmentPercent;
+            const comparisonValue = baseValue + adjustmentValue;
+
+            // 3. SACHWERTVERFAHREN (Cost Approach)
+            const landValueTotal = landValue * totalArea;
+            const constructionValue = constructionCosts * totalArea * (1 - ageDeduction);
+            const substanceValue = landValueTotal + constructionValue;
+
+            // Recommended value (average)
+            const recommendedValue = (incomeValue + comparisonValue + substanceValue) / 3;
+            const recommendedPerSqm = recommendedValue / totalArea;
+
+            // Kennzahlen
+            const grossYield = (grossRentAmount / purchasePrice) * 100;
+            const netYield = (netIncome / purchasePrice) * 100;
+            const priceMultiple = purchasePrice / (grossRentAmount || 1);
+
+            // Update UI
+            setResultValue('netIncome', netIncome);
+            setResultValue('grossRent', grossRentAmount);
+            setResultValue('vacancyLoss', vacancyLossAmount);
+            setResultValue('opCosts', operatingCosts);
+            setResultValue('maintenance', maintenanceAmount);
+            setResultValue('incomeValue', incomeValue);
+
+            setResultValue('baseValue', baseValue);
+            setResultValue('adjustment', adjustmentValue);
+            setResultValue('comparisonValue', comparisonValue);
+
+            setResultValue('landValueTotal', landValueTotal);
+            setResultValue('constructionValue', constructionValue);
+            setResultValue('substanceValue', substanceValue);
+
+            setResultValue('summaryIncome', incomeValue);
+            setResultValue('summaryIncomePerSqm', incomeValue / totalArea);
+            setResultValue('summaryComparison', comparisonValue);
+            setResultValue('summaryComparisonPerSqm', comparisonValue / totalArea);
+            setResultValue('summarySubstance', substanceValue);
+            setResultValue('summarySubstancePerSqm', substanceValue / totalArea);
+
+            setResultValue('recommendedValue', recommendedValue);
+            setResultValue('recommendedPerSqm', recommendedPerSqm);
+
+            setResultPercent('grossYield', grossYield);
+            setResultPercent('netYield', netYield);
+            document.getElementById('priceMultiple').textContent = priceMultiple.toFixed(1) + 'x';
+
+            // Warnings
+            const warningsHtml = [];
+            if (vacancyRate > 0.1) {
+                warningsHtml.push('<div class="warning">⚠️ Hohe Leerstandsquote (' + (vacancyRate * 100).toFixed(1) + '%) – reduziert Rentabilität</div>');
+            }
+            if (yearBuilt < 1950) {
+                warningsHtml.push('<div class="warning">⚠️ Alte Bausubstanz – erhöhte Instandhaltungskosten erwartet</div>');
+            }
+            if (netYield < 2) {
+                warningsHtml.push('<div class="warning">⚠️ Netto-Rendite unter 2% – überprüfen Sie Eingaben</div>');
+            }
+            if (incomeValue < purchasePrice * 0.8 || incomeValue > purchasePrice * 1.2) {
+                warningsHtml.push('<div class="warning">⚠️ Ertragswert weicht stark vom Kaufpreis ab</div>');
+            }
+            if (netYield > 8) {
+                warningsHtml.push('<div class="success">✓ Attraktive Rendite – überprüfen Sie Realität der Eingaben</div>');
+            }
+
+            document.getElementById('warnings').innerHTML = warningsHtml.join('');
+            document.getElementById('results').classList.remove('hidden');
+
+            // Store for PDF export
+            window.valuationData = {
+                projectName,
+                yearBuilt,
+                totalArea,
+                purchasePrice,
+                annualRent,
+                operatingCosts,
+                vacancyRate,
+                incomeValue,
+                comparisonValue,
+                substanceValue,
+                recommendedValue,
+                netIncome,
+                grossYield,
+                netYield
+            };
+        }
+
+        function exportPDF() {
+            if (!window.valuationData) {
+                alert('Bitte führen Sie zuerst eine Bewertung durch.');
+                return;
+            }
+
+            const data = window.valuationData;
+            const html = `
+                <div style="font-family: Arial; margin: 20px;">
+                    <h1 style="color: #0d6e4f; text-align: center;">Bewertungsgutachten</h1>
+                    <h2 style="color: #0d6e4f;">${data.projectName}</h2>
+                    
+                    <h3>Liegenschaftsdaten</h3>
+                    <table style="width: 100%; border-collapse: collapse;">
+                        <tr><td style="padding: 8px; border: 1px solid #ccc;"><strong>Baujahr</strong></td><td style="padding: 8px; border: 1px solid #ccc;">${data.yearBuilt}</td></tr>
+                        <tr><td style="padding: 8px; border: 1px solid #ccc;"><strong>Fläche (m²)</strong></td><td style="padding: 8px; border: 1px solid #ccc;">${data.totalArea}</td></tr>
+                    </table>
+
+                    <h3>Finanzielle Daten</h3>
+                    <table style="width: 100%; border-collapse: collapse;">
+                        <tr><td style="padding: 8px; border: 1px solid #ccc;"><strong>Kaufpreis</strong></td><td style="padding: 8px; border: 1px solid #ccc;">€ ${data.purchasePrice.toLocaleString('de-AT')}</td></tr>
+                        <tr><td style="padding: 8px; border: 1px solid #ccc;"><strong>Jahresmieteinnahmen</strong></td><td style="padding: 8px; border: 1px solid #ccc;">€ ${data.annualRent.toLocaleString('de-AT')}</td></tr>
+                        <tr><td style="padding: 8px; border: 1px solid #ccc;"><strong>Nettomieteinnahmen</strong></td><td style="padding: 8px; border: 1px solid #ccc;">€ ${data.netIncome.toLocaleString('de-AT')}</td></tr>
+                    </table>
+
+                    <h3>Bewertungsergebnis</h3>
+                    <table style="width: 100%; border-collapse: collapse;">
+                        <tr style="background: #0d6e4f; color: white;"><td style="padding: 8px;"><strong>Empfohlener Wert</strong></td><td style="padding: 8px;">€ ${data.recommendedValue.toLocaleString('de-AT')}</td></tr>
+                        <tr><td style="padding: 8px; border: 1px solid #ccc;"><strong>Brutto-Rendite</strong></td><td style="padding: 8px; border: 1px solid #ccc;">${data.grossYield.toFixed(2)}%</td></tr>
+                        <tr><td style="padding: 8px; border: 1px solid #ccc;"><strong>Netto-Rendite</strong></td><td style="padding: 8px; border: 1px solid #ccc;">${data.netYield.toFixed(2)}%</td></tr>
+                    </table>
+
+                    <p style="margin-top: 30px; font-size: 10px; color: #666;">
+                        <strong>Haftungsausschluss:</strong> Diese Bewertung dient ausschließlich zu Informationszwecken und ersetzt keine professionelle Sachverständigenbewertung. 
+                        Für verbindliche Gutachten konsultieren Sie einen zertifizierten Sachverständigen nach ÖNORM und LBG.
+                    </p>
+                </div>
+            `;
+
+            const element = document.createElement('div');
+            element.innerHTML = html;
+
+            const opt = {
+                margin: 10,
+                filename: 'Immobilienbewertung_' + new Date().getTime() + '.pdf',
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2 },
+                jsPDF: { orientation: 'portrait', unit: 'mm', format: 'a4' }
+            };
+
+            html2pdf().set(opt).from(element).save();
+        }
+    </script>
+</body>
+</html>
